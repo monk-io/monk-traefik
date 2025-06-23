@@ -1,0 +1,2 @@
+REPO monk-traefik
+LOAD manifest.yaml

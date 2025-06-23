@@ -1,0 +1,42 @@
+namespace: system
+
+traefik:
+  defines: runnable
+  variables:
+    configs-dir:
+      value: <- `${volume-path}/ingress`
+      type: string
+    http-port:
+      value: 80
+      type: int
+  files:
+    traefik-config:
+      container: traefik
+      path: /etc/traefik/traefik.yml
+      mode: 511
+      contents: |
+        api:
+          insecure: true
+        entryPoints:
+          web:
+            address: ":80"
+        providers:
+          file:
+            directory: /etc/traefik/dynamic
+            watch: true
+        log:
+          level: INFO
+  containers:
+    traefik:
+      image: traefik:v3.4.1
+      paths:
+        - <- `${configs-dir}:/etc/traefik/dynamic`
+  services:
+    web:
+      container: traefik
+      port: 80
+      protocol: tcp
+      host-port: <- $http-port
+      publish: true
+  scale:
+    value: metric("node-count")
