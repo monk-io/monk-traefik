@@ -9,6 +9,9 @@ traefik:
     http-port:
       value: 80
       type: int
+    traefik-port:
+      value: 8085
+      type: int
   files:
     traefik-config:
       container: traefik
@@ -38,5 +41,10 @@ traefik:
       protocol: tcp
       host-port: <- $http-port
       publish: true
+    traefik:
+      container: traefik
+      port: 8080
+      protocol: tcp
+      host-port: <- $traefik-port
   scale:
     value: metric("node-count")
