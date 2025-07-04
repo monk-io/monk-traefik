@@ -31,7 +31,7 @@ traefik:
           level: INFO
   containers:
     traefik:
-      image: traefik:v3.4.1
+      image: traefik:v3.4.3
       paths:
         - <- `${configs-dir}:/etc/traefik/dynamic`
   services:
@@ -48,3 +48,115 @@ traefik:
       host-port: <- $traefik-port
   scale:
     value: metric("node-count")
+
+traefik-waf:
+  defines: runnable
+  variables:
+    waf-hostname:
+      type: string
+      value: <- service-hostname("system/waf", "waf")
+    waf-port:
+      type: string
+      value: <- service-port("system/waf", "waf")
+    configs-dir:
+      value: <- `${volume-path}/ingress`
+      type: string
+    http-port:
+      value: 80
+      type: int
+  connections:
+    waf-conn:
+      runnable: system/waf
+      service: waf
+  files:
+    traefik-config:
+      container: traefik
+      path: /etc/traefik/traefik.yml
+      mode: 511
+      contents: |
+        api:
+          insecure: true
+        entryPoints:
+          web:
+            address: ":80"
+        providers:
+          file:
+            directory: /etc/traefik/dynamic
+            watch: true
+        experimental:
+          plugins:
+            traefik-modsecurity-plugin:
+              moduleName: github.com/madebymode/traefik-modsecurity-plugin
+              version: v1.6.0
+        log:
+          level: DEBUG
+  containers:
+    traefik:
+      image: traefik:v3.4.3
+      paths:
+        - <- `${configs-dir}:/etc/traefik/dynamic`
+  services:
+    web:
+      container: traefik
+      port: 80
+      protocol: tcp
+      host-port: <- $http-port
+      publish: true
+    traefik:
+      container: traefik
+      port: 8080
+      protocol: tcp
+
+waf:
+  defines: runnable
+  variables:
+    dummy-hostname:
+      type: string
+      value: <- service-hostname("system/dummy", "dummy")
+    dummy-port:
+      type: string
+      value: <- service-port("system/dummy", "dummy")
+  containers:
+    waf:
+      image: owasp/modsecurity-crs:4.16.0-apache-alpine-202506301206
+      environment:
+        - PARANOIA=1
+        - ANOMALY_INBOUND=10
+        - ANOMALY_OUTBOUND=5
+        - <- `BACKEND=http://${dummy-hostname}:${dummy-port}`
+        # New in CRS 4
+        - REPORTING_LEVEL=2
+
+        #######################################################
+        # ModSecurity ENV Variables
+        #######################################################
+
+        - MODSEC_AUDIT_LOG_FORMAT=JSON
+        - MODSEC_RULE_ENGINE=On
+  connections:
+    dummy-conn:
+      runnable: system/dummy
+      service: dummy
+  services:
+    waf:
+      container: waf
+      port: 8080
+      protocol: tcp
+
+dummy:
+  defines: runnable
+  containers:
+    dummy:
+      image: traefik/whoami:v1.11
+  services:
+    dummy:
+      container: dummy
+      port: 80
+      protocol: tcp
+
+traefik-stack:
+  defines: process-group
+  runnable-list:
+    - system/traefik-waf
+    - system/waf
+    - system/dummy
