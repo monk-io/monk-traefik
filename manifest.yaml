@@ -106,6 +106,8 @@ traefik-waf:
       container: traefik
       port: 8080
       protocol: tcp
+  scale:
+    value: metric("node-count")
 
 waf:
   defines: runnable
