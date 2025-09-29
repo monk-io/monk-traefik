@@ -12,6 +12,9 @@ traefik:
     traefik-port:
       value: 8085
       type: int
+    http-secure-port:
+      value: 443
+      type: int
   files:
     traefik-config:
       container: traefik
@@ -23,6 +26,22 @@ traefik:
         entryPoints:
           web:
             address: ":80"
+            http:
+              redirections:
+                entryPoint:
+                  to: websecure
+                  scheme: https
+                  permanent: true
+          websecure:
+            address: ":443"
+            asDefault: true
+            http:
+              tls: {}
+        certificatesresolvers:
+          monkresolver:
+            acme:
+              tlschallenge: true
+              storage: /letsencrypt/acme.json
         providers:
           file:
             directory: /etc/traefik/dynamic
@@ -34,12 +53,19 @@ traefik:
       image: traefik:v3.4.3
       paths:
         - <- `${configs-dir}:/etc/traefik/dynamic`
+        - <- `${volume-path}/letsencrypt:/letsencrypt`
   services:
     web:
       container: traefik
       port: 80
       protocol: tcp
       host-port: <- $http-port
+      publish: true
+    websecure:
+      container: traefik
+      port: 443
+      protocol: tcp
+      host-port: <- $http-secure-port
       publish: true
     traefik:
       container: traefik
@@ -64,6 +90,9 @@ traefik-waf:
     http-port:
       value: 80
       type: int
+    http-secure-port:
+      value: 443
+      type: int
   connections:
     waf-conn:
       runnable: system/waf
@@ -79,6 +108,22 @@ traefik-waf:
         entryPoints:
           web:
             address: ":80"
+            http:
+              redirections:
+                entryPoint:
+                  to: websecure
+                  scheme: https
+                  permanent: true
+          websecure:
+            address: ":443"
+            asDefault: true
+            http:
+              tls: {}
+        certificatesresolvers:
+          monkresolver:
+            acme:
+              tlschallenge: true
+              storage: /letsencrypt/acme.json
         providers:
           file:
             directory: /etc/traefik/dynamic
@@ -95,12 +140,19 @@ traefik-waf:
       image: traefik:v3.4.3
       paths:
         - <- `${configs-dir}:/etc/traefik/dynamic`
+        - <- `${volume-path}/letsencrypt:/letsencrypt`
   services:
     web:
       container: traefik
       port: 80
       protocol: tcp
       host-port: <- $http-port
+      publish: true
+    websecure:
+      container: traefik
+      port: 443
+      protocol: tcp
+      host-port: <- $http-secure-port
       publish: true
     traefik:
       container: traefik
