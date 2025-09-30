@@ -15,7 +15,23 @@ traefik:
     http-secure-port:
       value: 443
       type: int
+    tls-cert:
+      type: string
+      value: ""
+    tls-key:
+      type: string
+      value: ""
   files:
+    tls-cert:
+      container: traefik
+      path: /certs/tls.crt
+      mode: 511
+      contents: <- $tls-cert default("")
+    tls-key:
+      container: traefik
+      path: /certs/tls.key
+      mode: 511
+      contents: <- $tls-key default("")
     traefik-config:
       container: traefik
       path: /etc/traefik/traefik.yml
@@ -37,11 +53,6 @@ traefik:
             asDefault: true
             http:
               tls: {}
-        certificatesresolvers:
-          monkresolver:
-            acme:
-              tlschallenge: true
-              storage: /letsencrypt/acme.json
         providers:
           file:
             directory: /etc/traefik/dynamic
@@ -53,7 +64,6 @@ traefik:
       image: traefik:v3.4.3
       paths:
         - <- `${configs-dir}:/etc/traefik/dynamic`
-        - <- `${volume-path}/letsencrypt:/letsencrypt`
   services:
     web:
       container: traefik
@@ -93,11 +103,27 @@ traefik-waf:
     http-secure-port:
       value: 443
       type: int
+    tls-cert:
+      type: string
+      value: ""
+    tls-key:
+      type: string
+      value: ""
   connections:
     waf-conn:
       runnable: system/waf
       service: waf
   files:
+    tls-cert:
+      container: traefik
+      path: /certs/tls.crt
+      mode: 511
+      contents: <- $tls-cert default("")
+    tls-key:
+      container: traefik
+      path: /certs/tls.key
+      mode: 511
+      contents: <- $tls-key default("")
     traefik-config:
       container: traefik
       path: /etc/traefik/traefik.yml
@@ -119,11 +145,6 @@ traefik-waf:
             asDefault: true
             http:
               tls: {}
-        certificatesresolvers:
-          monkresolver:
-            acme:
-              tlschallenge: true
-              storage: /letsencrypt/acme.json
         providers:
           file:
             directory: /etc/traefik/dynamic
@@ -140,7 +161,6 @@ traefik-waf:
       image: traefik:v3.4.3
       paths:
         - <- `${configs-dir}:/etc/traefik/dynamic`
-        - <- `${volume-path}/letsencrypt:/letsencrypt`
   services:
     web:
       container: traefik
