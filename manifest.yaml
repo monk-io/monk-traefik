@@ -58,7 +58,7 @@ traefik:
             directory: /etc/traefik/dynamic
             watch: true
         log:
-          level: INFO
+          level: DEBUG
   containers:
     traefik:
       image: traefik:v3.4.3
