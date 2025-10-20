@@ -32,6 +32,16 @@ traefik:
       path: /certs/tls.key
       mode: 511
       contents: <- $tls-key default("")
+    node-cert:
+      mode: 511
+      container: traefik
+      path: /certs/node-tls.crt
+      contents: <- ssl-certificate default("")
+    node-key:
+      mode: 511
+      container: traefik
+      path: /certs/node-tls.key
+      contents: <- ssl-private-key default("")
     traefik-config:
       container: traefik
       path: /etc/traefik/traefik.yml
