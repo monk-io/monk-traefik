@@ -18,9 +18,15 @@ traefik:
     tls-cert:
       type: string
       value: ""
+      # deprecated: single global cert/key pair, kept for backward compatibility.
+      # The array-based "global-certs" plugin param (any number of domains) is
+      # handled entirely daemon-side (ingress_config.go writes per-domain cert
+      # files directly into the ingress config volume) — no template variable
+      # or file needed for it here.
     tls-key:
       type: string
       value: ""
+      # deprecated: see tls-cert.
   files:
     tls-cert:
       container: traefik
@@ -116,9 +122,13 @@ traefik-waf:
     tls-cert:
       type: string
       value: ""
+      # deprecated: single global cert/key pair, kept for backward compatibility.
+      # The array-based "global-certs" plugin param is handled entirely
+      # daemon-side — no template variable or file needed for it here.
     tls-key:
       type: string
       value: ""
+      # deprecated: see tls-cert.
   connections:
     waf-conn:
       runnable: system/waf
@@ -134,6 +144,16 @@ traefik-waf:
       path: /certs/tls.key
       mode: 511
       contents: <- $tls-key default("")
+    node-cert:
+      mode: 511
+      container: traefik
+      path: /certs/node-tls.crt
+      contents: <- ssl-certificate default("")
+    node-key:
+      mode: 511
+      container: traefik
+      path: /certs/node-tls.key
+      contents: <- ssl-private-key default("")
     traefik-config:
       container: traefik
       path: /etc/traefik/traefik.yml
