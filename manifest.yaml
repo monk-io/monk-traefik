@@ -145,8 +145,6 @@ traefik-waf:
       mode: 511
       contents: <- $tls-key default("")
     node-cert:
-      # was missing entirely — a peer's own custom cert (cluster.SetCertificate)
-      # never had any effect when the ModSecurity ingress stack was in use.
       mode: 511
       container: traefik
       path: /certs/node-tls.crt
