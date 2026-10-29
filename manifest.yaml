@@ -9,9 +9,6 @@ traefik:
     http-port:
       value: 80
       type: int
-    traefik-port:
-      value: 8085
-      type: int
     http-secure-port:
       value: 443
       type: int
@@ -31,30 +28,28 @@ traefik:
     tls-cert:
       container: traefik
       path: /certs/tls.crt
-      mode: 511
+      mode: 0644
       contents: <- $tls-cert default("")
     tls-key:
       container: traefik
       path: /certs/tls.key
-      mode: 511
+      mode: 0600
       contents: <- $tls-key default("")
     node-cert:
-      mode: 511
+      mode: 0644
       container: traefik
       path: /certs/node-tls.crt
       contents: <- ssl-certificate default("")
     node-key:
-      mode: 511
+      mode: 0600
       container: traefik
       path: /certs/node-tls.key
       contents: <- ssl-private-key default("")
     traefik-config:
       container: traefik
       path: /etc/traefik/traefik.yml
-      mode: 511
+      mode: 0644
       contents: |
-        api:
-          insecure: true
         entryPoints:
           web:
             address: ":80"
@@ -74,7 +69,7 @@ traefik:
             directory: /etc/traefik/dynamic
             watch: true
         log:
-          level: DEBUG
+          level: INFO
   containers:
     traefik:
       image: traefik:v3.4.3
@@ -93,11 +88,6 @@ traefik:
       protocol: tcp
       host-port: <- $http-secure-port
       publish: true
-    traefik:
-      container: traefik
-      port: 8080
-      protocol: tcp
-      host-port: <- $traefik-port
   scale:
     value: metric("node-count")
 
@@ -137,30 +127,28 @@ traefik-waf:
     tls-cert:
       container: traefik
       path: /certs/tls.crt
-      mode: 511
+      mode: 0644
       contents: <- $tls-cert default("")
     tls-key:
       container: traefik
       path: /certs/tls.key
-      mode: 511
+      mode: 0600
       contents: <- $tls-key default("")
     node-cert:
-      mode: 511
+      mode: 0644
       container: traefik
       path: /certs/node-tls.crt
       contents: <- ssl-certificate default("")
     node-key:
-      mode: 511
+      mode: 0600
       container: traefik
       path: /certs/node-tls.key
       contents: <- ssl-private-key default("")
     traefik-config:
       container: traefik
       path: /etc/traefik/traefik.yml
-      mode: 511
+      mode: 0644
       contents: |
-        api:
-          insecure: true
         entryPoints:
           web:
             address: ":80"
@@ -185,7 +173,7 @@ traefik-waf:
               moduleName: github.com/madebymode/traefik-modsecurity-plugin
               version: v1.6.0
         log:
-          level: DEBUG
+          level: INFO
   containers:
     traefik:
       image: traefik:v3.4.3
@@ -204,10 +192,6 @@ traefik-waf:
       protocol: tcp
       host-port: <- $http-secure-port
       publish: true
-    traefik:
-      container: traefik
-      port: 8080
-      protocol: tcp
   scale:
     value: metric("node-count")
 
