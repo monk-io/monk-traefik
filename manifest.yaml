@@ -2,6 +2,11 @@ namespace: system
 
 traefik:
   defines: runnable
+  # ssl-private-key reads the node's certificate key, which the daemon refuses to a template that
+  # doesn't list it. Without this the key reads as empty and Traefik serves its default certificate.
+  permissions:
+    secrets:
+      - cluster:tls-key
   variables:
     configs-dir:
       value: <- `${volume-path}/ingress`
@@ -93,6 +98,10 @@ traefik:
 
 traefik-waf:
   defines: runnable
+  # Same as traefik: ssl-private-key needs this listed.
+  permissions:
+    secrets:
+      - cluster:tls-key
   variables:
     waf-hostname:
       type: string
